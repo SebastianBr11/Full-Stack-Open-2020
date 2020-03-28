@@ -3,6 +3,7 @@ import Numbers from "./components/Numbers";
 import Search from "./components/Search";
 import PersonForm from "./components/PersonForm";
 import numberServices from "./services/numberServices";
+import Notification from "./components/Notification";
 
 
 const App = () => {
@@ -10,6 +11,8 @@ const App = () => {
   const [newName, setNewName] = useState("")
   const [newNumber, setNewNumber] = useState("")
   const [filterName, setFilterName] = useState("")
+  const [message, setMessage] = useState(null)
+  const [isError, setIsError] = useState(false)
 
   useEffect(() => {
     numberServices
@@ -36,10 +39,20 @@ const App = () => {
       if (replace) {
         numberServices.update(oldId, newNameObject)
           .then(changedPerson => setPersons(prevPersons => [...prevPersons.filter(n => n.id !== oldId), changedPerson]))
+          setIsError(false);
+          setMessage(`Changed ${newNameObject.name}'s number`)
+          setTimeout(() => {
+            setMessage(null);
+          }, 5000)   
       }
     } else {
       numberServices.create(newNameObject)
         .then(newPerson => setPersons(prevPersons => [...prevPersons, newPerson]))
+      setIsError(false);
+      setMessage(`Added ${newNameObject.name}`)
+      setTimeout(() => {
+        setMessage(null);
+      }, 5000)
     }
 
     setNewName("")
@@ -53,7 +66,12 @@ const App = () => {
       numberServices
         .remove(id)
         .catch(err => {
-          alert(`the person ${name} was already deleted from server`)
+          console.log(err)
+          setIsError(true)
+          setMessage(`Information of ${name} has already been removed from server`)
+          setTimeout(() => {
+            setMessage(null)
+          }, 5000)
           setPersons(persons.filter(n => n.id !== id));
         });
       setPersons(persons.filter(n => n.id !== id));
@@ -86,6 +104,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} isError={isError} />
       <Search filterName={filterName} handler={handleNameSearch} />
       <h2>add a new</h2>
       <PersonForm newName={newName} newNumber={newNumber} handlers={handlers} />
